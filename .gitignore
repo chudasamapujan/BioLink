@@ -1,0 +1,14 @@
+# Python virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Firebase or API secrets
+client.json
+
+# Local SQLite DB
+instance/biolink.db
+
+# Python bytecode
+__pycache__/

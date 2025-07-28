@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+
+{% block title %}Unified AI Prediction - BioLink{% endblock %}
+
+{% block head_extra %}
+  <style>
+    /* Initially hide prediction result section */
+    #predictionResultSection {
+      display: none;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+    <div class="text-center mb-10 relative z-10">
+      <h1 class="text-4xl md:text-5xl font-bold glow-text mb-4">Unified AI Health Prediction</h1>
+      <p class="text-xl text-blue-200 max-w-3xl mx-auto">
+        Provide your comprehensive health data and reports to get personalized AI predictions for various diseases, all in one place.
+      </p>
+    </div>
+    <div class="section-divider mb-12"></div>
+
+    <section class="mb-12 relative z-10">
+      <div class="card p-8 md:p-10 max-w-3xl mx-auto">
+        <form id="unifiedPredictionForm" action="#" method="POST" enctype="multipart/form-data" class="space-y-8">
+
+          <div>
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Select Disease for Prediction</h2>
+            <select id="diseaseSelect" name="disease" class="form-select w-full" required>
+              <option value="">-- Select a Disease --</option>
+              <option value="diabetes">Type 2 Diabetes</option>
+              <option value="cardiovascular">Cardiovascular Disease</option>
+              <option value="hypertension">Hypertension (High BP)</option>
+              <option value="infection">Infection Risk</option>
+              <option value="cancer">Cancer Risk</option>
+            </select>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Personal & General Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="age" class="block text-blue-200 text-sm font-semibold mb-2">Age</label>
+                <input type="number" id="age" name="age" class="form-input w-full" placeholder="e.g., 30" min="1" max="120" required>
+              </div>
+              <div>
+                <label for="gender" class="block text-blue-200 text-sm font-semibold mb-2">Gender</label>
+                <select id="gender" name="gender" class="form-select w-full" required>
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label for="height" class="block text-blue-200 text-sm font-semibold mb-2">Height (cm)</label>
+                <input type="number" id="height" name="height" class="form-input w-full" placeholder="e.g., 175" step="0.1">
+              </div>
+              <div>
+                <label for="weight" class="block text-blue-200 text-sm font-semibold mb-2">Weight (kg)</label>
+                <input type="number" id="weight" name="weight" class="form-input w-full" placeholder="e.g., 70" step="0.1">
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="smoking" class="block text-blue-200 text-sm font-semibold mb-2">Smoking Habits</label>
+                <select id="smoking" name="smoking" class="form-select w-full">
+                  <option value="">Select Option</option>
+                  <option value="never">Never Smoker</option>
+                  <option value="ex-smoker">Ex-smoker</option>
+                  <option value="current-light">Current (Light)</option>
+                  <option value="current-heavy">Current (Heavy)</option>
+                </select>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="alcohol" class="block text-blue-200 text-sm font-semibold mb-2">Alcohol Consumption</label>
+                <select id="alcohol" name="alcohol" class="form-select w-full">
+                  <option value="">Select Option</option>
+                  <option value="never">Never</option>
+                  <option value="rarely">Rarely</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="heavy">Heavy</option>
+                </select>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="exercise" class="block text-blue-200 text-sm font-semibold mb-2">Exercise Frequency (days/week)</label>
+                <input type="number" id="exercise" name="exercise" class="form-input w-full" placeholder="e.g., 3" min="0" max="7">
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="diet" class="block text-blue-200 text-sm font-semibold mb-2">Brief Description of Diet</label>
+                <textarea id="diet" name="diet" rows="3" class="form-textarea w-full" placeholder="e.g., Mostly vegetarian, occasional fast food."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Medical History</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="col-span-1 md:col-span-2">
+                <label for="existingConditions" class="block text-blue-200 text-sm font-semibold mb-2">Existing Medical Conditions (comma-separated)</label>
+                <input type="text" id="existingConditions" name="existingConditions" class="form-input w-full" placeholder="e.g., Hypertension, Mild Asthma">
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="familyHistory" class="block text-blue-200 text-sm font-semibold mb-2">Family Medical History (any hereditary diseases?)</label>
+                <textarea id="familyHistory" name="familyHistory" rows="3" class="form-textarea w-full" placeholder="e.g., Father had diabetes, Mother has no major conditions."></textarea>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="medicationsGeneral" class="block text-blue-200 text-sm font-semibold mb-2">Current Medications (comma-separated)</label>
+                <textarea id="medicationsGeneral" name="medicationsGeneral" rows="2" class="form-input w-full" placeholder="e.g., Vitamin D, Aspirin"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="diseaseSpecificDataFields">
+            </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Upload Medical Reports/Scans</h2>
+            <p class="text-blue-200 text-sm mb-4">Upload blood reports, X-rays, MRI scans, or other medical documents (PDF, JPG, PNG, DICOM).</p>
+            <label for="fileUpload" class="file-input-label">
+              <svg class="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v8"/></svg>
+              <span class="text-lg text-blue-300 font-semibold">Drag & Drop Files Here or Click to Upload</span>
+              <span class="text-sm text-blue-400 mt-1">(Max file size: 10MB per file)</span>
+              <input type="file" id="fileUpload" name="fileUpload[]" multiple accept=".pdf,.jpg,.jpeg,.png,.dcm">
+            </label>
+            <div id="fileList" class="mt-4 space-y-2">
+              </div>
+          </div>
+
+          <button type="submit" class="btn-secondary w-full py-4 rounded-lg text-lg font-bold">
+            Get AI Health Prediction
+          </button>
+        </form>
+        <p class="text-green-400 text-center mt-4" id="successMessage" style="display: none;">Prediction generated successfully!</p>
+      </div>
+    </section>
+
+    <section id="predictionResultSection" class="mb-12 relative z-10">
+      <div class="section-divider mb-12"></div>
+      <div class="card p-8 md:p-10 max-w-2xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-blue-300 mb-6" id="resultTitle"></h2>
+        <div class="mb-6">
+          <p class="text-5xl font-extrabold" id="predictionScoreDisplay">--</p>
+          <div class="progress-bar-bg w-full mt-4">
+            <div id="riskProgressBarDisplay" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <p class="text-sm text-blue-300 mt-2" id="riskExplanationDisplay"></p>
+        </div>
+        <p class="text-blue-100 text-lg" id="resultDescription"></p>
+      </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // --- Dynamic Form Fields & Prediction Logic ---
+    const diseaseSpecificFieldsContainer = document.getElementById('diseaseSpecificDataFields');
+    const predictionResultSection = document.getElementById('predictionResultSection');
+    const predictionScoreDisplay = document.getElementById('predictionScoreDisplay');
+    const riskProgressBarDisplay = document.getElementById('riskProgressBarDisplay');
+    const riskExplanationDisplay = document.getElementById('riskExplanationDisplay');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultDescription = document.getElementById('resultDescription');
+    const successMessage = document.getElementById('successMessage');
+
+    const diseaseData = {
+        diabetes: {
+            title: "Type 2 Diabetes Risk Prediction",
+            description: "Based on your data, here's your personalized risk assessment for Type 2 Diabetes.",
+            fields: `
+                <div>
+                    <label for="bloodGlucose" class="block text-blue-200 text-sm font-semibold mb-2">Fasting Blood Glucose (mg/dL)</label>
+                    <input type="number" id="bloodGlucose" name="bloodGlucose" class="form-input w-full" placeholder="e.g., 110" step="0.1">
+                </div>
+                <div>
+                    <label for="hba1c" class="block text-blue-200 text-sm font-semibold mb-2">HbA1c (%)</label>
+                    <input type="number" id="hba1c" name="hba1c" class="form-input w-full" placeholder="e.g., 5.7" step="0.1" min="4" max="15">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label for="familyHistoryDiabetes" class="block text-blue-200 text-sm font-semibold mb-2">Family History of Diabetes (e.g., 'Mother, Father, None')</label>
+                    <input type="text" id="familyHistoryDiabetes" name="familyHistoryDiabetes" class="form-input w-full" placeholder="e.g., Mother had Type 2 Diabetes">
+                </div>
+            `,
+            predict: function() {
+                const randomRisk = Math.random(); // 0 to 1
+                let scoreText, widthPercentage, riskClass, explanationText;
+                if (randomRisk < 0.4) {
+                    scoreText = "Low Risk";
+                    widthPercentage = 25 + Math.floor(Math.random() * 10);
+                    riskClass = "risk-low";
+                    explanationText = "Based on your data, your risk for Type 2 Diabetes is currently low.";
+                } else if (randomRisk < 0.7) {
+                    scoreText = "Medium Risk";
+                    widthPercentage = 50 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-medium";
+                    explanationText = "Your risk for Type 2 Diabetes is moderate. Consider reviewing lifestyle habits with a doctor.";
+                } else {
+                    scoreText = "High Risk";
+                    widthPercentage = 80 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-high";
+                    explanationText = "Your risk for Type 2 Diabetes is high. We strongly recommend consulting a healthcare professional soon.";
+                }
+                return { scoreText, widthPercentage, riskClass, explanationText };
+            }
+        },
+        cardiovascular: {
+            title: "Cardiovascular Disease Risk Prediction",
+            description: "Based on your data, here's your personalized risk assessment for Cardiovascular Disease.",
+            fields: `
+                <div>
+                    <label for="systolicBP" class="block text-blue-200 text-sm font-semibold mb-2">Systolic BP (mmHg)</label>
+                    <input type="number" id="systolicBP" name="systolicBP" class="form-input w-full" placeholder="e.g., 120" min="50" max="250">
+                </div>
+                <div>
+                    <label for="diastolicBP" class="block text-blue-200 text-sm font-semibold mb-2">Diastolic BP (mmHg)</label>
+                    <input type="number" id="diastolicBP" name="diastolicBP" class="form-input w-full" placeholder="e.g., 80" min="30" max="150">
+                </div>
+                <div>
+                    <label for="heartRate" class="block text-blue-200 text-sm font-semibold mb-2">Resting Heart Rate (bpm)</label>
+                    <input type="number" id="heartRate" name="heartRate" class="form-input w-full" placeholder="e.g., 70" min="40" max="200">
+                </div>
+                <div>
+                    <label for="cholesterolLDL" class="block text-blue-200 text-sm font-semibold mb-2">LDL Cholesterol (mg/dL)</label>
+                    <input type="number" id="cholesterolLDL" name="cholesterolLDL" class="form-input w-full" placeholder="e.g., 100" min="0" max="500">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label for="familyHistoryCardio" class="block text-blue-200 text-sm font-semibold mb-2">Family History of Heart Disease</label>
+                    <input type="text" id="familyHistoryCardio" name="familyHistoryCardio" class="form-input w-full" placeholder="e.g., Father had heart attack">
+                </div>
+            `,
+            predict: function() {
+                const randomRisk = Math.random();
+                let scoreText, widthPercentage, riskClass, explanationText;
+                if (randomRisk < 0.3) {
+                    scoreText = "Optimal Risk";
+                    widthPercentage = 20 + Math.floor(Math.random() * 10);
+                    riskClass = "risk-low";
+                    explanationText = "Your cardiovascular risk is optimal. Continue your heart-healthy habits!";
+                } else if (randomRisk < 0.65) {
+                    scoreText = "Moderate Risk";
+                    widthPercentage = 45 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-medium";
+                    explanationText = "Your heart health shows moderate risk factors. Consider reviewing your diet and exercise with a doctor.";
+                } else {
+                    scoreText = "Elevated Risk";
+                    widthPercentage = 70 + Math.floor(Math.random() * 20);
+                    riskClass = "risk-high";
+                    explanationText = "Your cardiovascular risk is elevated. We strongly recommend immediate consultation with a cardiologist.";
+                }
+                return { scoreText, widthPercentage, riskClass, explanationText };
+            }
+        },
+        hypertension: {
+            title: "Hypertension (High BP) Risk Prediction",
+            description: "Based on your data, here's your personalized risk assessment for Hypertension.",
+            fields: `
+                <div>
+                    <label for="systolicBPUpdate" class="block text-blue-200 text-sm font-semibold mb-2">Systolic BP (mmHg)</label>
+                    <input type="number" id="systolicBPUpdate" name="systolicBPUpdate" class="form-input w-full" placeholder="e.g., 125" min="50" max="250">
+                </div>
+                <div>
+                    <label for="diastolicBPUpdate" class="block text-blue-200 text-sm font-semibold mb-2">Diastolic BP (mmHg)</label>
+                    <input type="number" id="diastolicBPUpdate" name="diastolicBPUpdate" class="form-input w-full" placeholder="e.g., 85" min="30" max="150">
+                </div>
+                <div>
+                    <label for="sodiumIntake" class="block text-blue-200 text-sm font-semibold mb-2">Daily Sodium Intake (mg)</label>
+                    <input type="number" id="sodiumIntake" name="sodiumIntake" class="form-input w-full" placeholder="e.g., 2000" min="0">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label for="stressLevel" class="block text-blue-200 text-sm font-semibold mb-2">Average Stress Level (1-5, 5=high)</label>
+                    <input type="number" id="stressLevel" name="stressLevel" class="form-input w-full" placeholder="e.g., 3" min="1" max="5">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label for="familyHistoryHypertension" class="block text-blue-200 text-sm font-semibold mb-2">Family History of Hypertension</label>
+                    <input type="text" id="familyHistoryHypertension" name="familyHistoryHypertension" class="form-input w-full" placeholder="e.g., Mother had high BP">
+                </div>
+            `,
+            predict: function() {
+                const randomRisk = Math.random();
+                let scoreText, widthPercentage, riskClass, explanationText;
+                if (randomRisk < 0.3) {
+                    scoreText = "Optimal Risk";
+                    widthPercentage = 20 + Math.floor(Math.random() * 10);
+                    riskClass = "risk-low";
+                    explanationText = "Your hypertension risk is optimal. Keep up the good work on managing your BP!";
+                } else if (randomRisk < 0.65) {
+                    scoreText = "Moderate Risk";
+                    widthPercentage = 45 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-medium";
+                    explanationText = "Your blood pressure shows moderate risk factors. Consider reviewing your diet and stress management with a doctor.";
+                } else {
+                    scoreText = "Elevated Risk";
+                    widthPercentage = 70 + Math.floor(Math.random() * 20);
+                    riskClass = "risk-high";
+                    explanationText = "Your hypertension risk is elevated. We strongly recommend immediate consultation with a healthcare professional.";
+                }
+                return { scoreText, widthPercentage, riskClass, explanationText };
+            }
+        },
+        infection: {
+            title: "Infection Risk Prediction",
+            description: "Based on your data, here's your personalized risk assessment for common infections.",
+            fields: `
+                <div>
+                    <label for="temperatureUpdate" class="block text-blue-200 text-sm font-semibold mb-2">Latest Body Temperature (°F)</label>
+                    <input type="number" id="temperatureUpdate" name="temperatureUpdate" class="form-input w-full" placeholder="e.g., 98.6" step="0.1">
+                </div>
+                <div>
+                    <label for="symptoms" class="block text-blue-200 text-sm font-semibold mb-2">Any Current Symptoms? (e.g., cough, sore throat)</label>
+                    <input type="text" id="symptoms" name="symptoms" class="form-input w-full" placeholder="e.g., Mild headache">
+                </div>
+                <div>
+                    <label for="sleepHours" class="block text-blue-200 text-sm font-semibold mb-2">Hours of Sleep Last Night</label>
+                    <input type="number" id="sleepHours" name="sleepHours" class="form-input w-full" placeholder="e.g., 7" min="0" max="12">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label for="recentExposure" class="block text-blue-200 text-sm font-semibold mb-2">Recent Exposure to Sick Individuals?</label>
+                    <select id="recentExposure" name="recentExposure" class="form-select w-full">
+                        <option value="">Select Option</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+            `,
+            predict: function() {
+                const randomRisk = Math.random();
+                let scoreText, widthPercentage, riskClass, explanationText;
+                if (randomRisk < 0.35) {
+                    scoreText = "Low Risk";
+                    widthPercentage = 20 + Math.floor(Math.random() * 10);
+                    riskClass = "risk-low";
+                    explanationText = "Your risk of common infections is currently low. Keep up healthy hygiene and lifestyle!";
+                } else if (randomRisk < 0.75) {
+                    scoreText = "Moderate Risk";
+                    widthPercentage = 45 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-medium";
+                    explanationText = "Your infection risk is moderate. Pay extra attention to hygiene and rest.";
+                } else {
+                    scoreText = "Elevated Risk";
+                    widthPercentage = 70 + Math.floor(Math.random() * 20);
+                    riskClass = "risk-high";
+                    explanationText = "Your infection risk is elevated. Consider consulting a doctor, especially if you have symptoms.";
+                }
+                return { scoreText, widthPercentage, riskClass, explanationText };
+            }
+        },
+        cancer: {
+            title: "Cancer Risk Prediction",
+            description: "Based on your data, here's your generalized risk assessment for Cancer.",
+            fields: `
+                <div>
+                    <label for="familyCancerHistory" class="block text-blue-200 text-sm font-semibold mb-2">Family History of Cancer</label>
+                    <textarea id="familyCancerHistory" name="familyCancerHistory" rows="2" class="form-textarea w-full" placeholder="e.g., Mother had breast cancer."></textarea>
+                </div>
+                <div>
+                    <label for="smokingStatus" class="block text-blue-200 text-sm font-semibold mb-2">Smoking Status</label>
+                    <select id="smokingStatus" name="smokingStatus" class="form-select w-full">
+                        <option value="">Select Option</option>
+                        <option value="never">Never Smoked</option>
+                        <option value="ex-smoker">Ex-smoker</option>
+                        <option value="current-light">Current (Light)</option>
+                        <option value="current-heavy">Current (Heavy)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="alcoholFreq" class="block text-blue-200 text-sm font-semibold mb-2">Alcohol Consumption Frequency</label>
+                    <select id="alcoholFreq" name="alcoholFreq" class="form-select w-full">
+                        <option value="">Select Option</option>
+                        <option value="never">Never</option>
+                        <option value="rarely">Rarely</option>
+                        <option value="occasional">Occasionally (1-2 drinks/week)</option>
+                        <option value="moderate">Moderate (3-7 drinks/week)</option>
+                        <option value="heavy">Heavy (8+ drinks/week)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dietQuality" class="block text-blue-200 text-sm font-semibold mb-2">Dietary Habits</label>
+                    <input type="text" id="dietQuality" name="dietQuality" class="form-input w-full" placeholder="e.g., Mostly balanced">
+                </div>
+            `,
+            predict: function() {
+                const randomRisk = Math.random();
+                let scoreText, widthPercentage, riskClass, explanationText;
+                if (randomRisk < 0.25) {
+                    scoreText = "Low Risk";
+                    widthPercentage = 15 + Math.floor(Math.random() * 10);
+                    riskClass = "risk-low";
+                    explanationText = "Your generalized cancer risk is currently low. Continue focusing on healthy lifestyle choices.";
+                } else if (randomRisk < 0.6) {
+                    scoreText = "Moderate Risk";
+                    widthPercentage = 40 + Math.floor(Math.random() * 15);
+                    riskClass = "risk-medium";
+                    explanationText = "Your generalized cancer risk is moderate. Consider reviewing your lifestyle and family history with a doctor.";
+                } else {
+                    scoreText = "Elevated Risk";
+                    widthPercentage = 65 + Math.floor(Math.random() * 20);
+                    riskClass = "risk-high";
+                    explanationText = "Your generalized cancer risk is elevated. We strongly recommend consulting a healthcare professional for personalized screening and advice.";
+                }
+                return { scoreText, widthPercentage, riskClass, explanationText };
+            }
+        }
+    };
+
+    const diseaseSelect = document.getElementById('diseaseSelect');
+
+    // Function to update disease-specific fields based on selection
+    function updateDiseaseFields() {
+        const selectedDisease = diseaseSelect.value;
+        const fields = diseaseData[selectedDisease] ? diseaseData[selectedDisease].fields : '';
+        diseaseSpecificFieldsContainer.innerHTML = fields;
+        // Hide prediction result when disease selection changes
+        predictionResultSection.style.display = 'none';
+        successMessage.style.display = 'none';
+    }
+
+    diseaseSelect.addEventListener('change', updateDiseaseFields);
+    // Initial call to set up fields based on default or pre-selected option
+    updateDiseaseFields();
+
+
+    // --- File Upload Logic (from previous health-data-input.html) ---
+    const fileUploadInput = document.getElementById('fileUpload');
+    const uploadedFilesList = document.getElementById('fileList');
+    let uploadedFiles = []; // To store file objects
+
+    fileUploadInput.addEventListener('change', (event) => {
+      handleFiles(event.target.files);
+    });
+
+    const fileInputLabel = document.querySelector('.file-input-label');
+    if (fileInputLabel) {
+      fileInputLabel.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        fileInputLabel.style.borderColor = '#38bdf8';
+      });
+      fileInputLabel.addEventListener('dragleave', (event) => {
+        event.preventDefault();
+        fileInputLabel.style.borderColor = '#334155';
+      });
+      fileInputLabel.addEventListener('drop', (event) => {
+        event.preventDefault();
+        fileInputLabel.style.borderColor = '#334155';
+        handleFiles(event.dataTransfer.files);
+      });
+    }
+
+    function handleFiles(files) {
+        for (const file of files) {
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                alert(`File ${file.name} is too large. Max 10MB allowed.`);
+                continue;
+            }
+            const isDicom = file.name.toLowerCase().endsWith('.dcm');
+            if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) && !isDicom) {
+                 alert(`File ${file.name} is not a supported format (PDF, JPG, PNG, DICOM).`);
+                 continue;
+            }
+            uploadedFiles.push(file);
+            renderUploadedFileList();
+        }
+    }
+
+    function renderUploadedFileList() {
+        uploadedFilesList.innerHTML = ''; // Clear current list
+        uploadedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'uploaded-file-item';
+            fileItem.innerHTML = `
+                <span class="text-blue-100 text-sm">${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <button type="button" class="remove-file-btn" data-index="${index}">
+                    &times;
+                </button>
+            `;
+            uploadedFilesList.appendChild(fileItem);
+        });
+
+        document.querySelectorAll('.remove-file-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const indexToRemove = parseInt(event.target.dataset.index);
+                uploadedFiles.splice(indexToRemove, 1);
+                renderUploadedFileList();
+            });
+        });
+    }
+
+    // --- Form Submission Logic ---
+    const unifiedPredictionForm = document.getElementById('unifiedPredictionForm');
+    unifiedPredictionForm.addEventListener('submit', (event) => {
+        event.preventDefault(); // Prevent actual form submission
+
+        const selectedDisease = diseaseSelect.value;
+        if (!selectedDisease) {
+            alert("Please select a disease for prediction.");
+            return;
+        }
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+
+        submitBtn.textContent = 'Analyzing Data...';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('bg-blue-600', 'animate-pulse');
+
+        // Simulate data collection
+        const formData = new FormData(unifiedPredictionForm);
+        formData.append('uploadedFilesCount', uploadedFiles.length);
+        uploadedFiles.forEach((file, index) => {
+            formData.append(`file${index}`, file); // Conceptually append files
+        });
+
+        console.log('Simulating unified prediction data submission for:', selectedDisease, Object.fromEntries(formData.entries()));
+        console.log('Simulating uploaded files:', uploadedFiles.map(f => f.name));
+
+        // Simulate network delay and prediction
+        setTimeout(() => {
+            const result = diseaseData[selectedDisease].predict();
+
+            resultTitle.textContent = diseaseData[selectedDisease].title;
+            resultDescription.textContent = diseaseData[selectedDisease].description;
+            predictionScoreDisplay.textContent = result.scoreText;
+            riskProgressBarDisplay.style.width = `${result.widthPercentage}%`;
+            riskProgressBarDisplay.className = `progress-bar-fill ${result.riskClass}`;
+            riskExplanationDisplay.textContent = result.explanationText;
+
+            predictionResultSection.style.display = 'block'; // Show result section
+
+            // Show success message
+            successMessage.textContent = `Prediction for ${selectedDisease.charAt(0).toUpperCase() + selectedDisease.slice(1)} generated successfully!`;
+            successMessage.style.display = 'block';
+            window.scrollTo({ top: predictionResultSection.offsetTop - 100, behavior: 'smooth' }); // Scroll to result
+
+            // Reset button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-blue-600', 'animate-pulse');
+
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000); // Hide message after 5 seconds
+
+        }, 3000); // Simulate network delay
+    });
+  </script>
+{% endblock %}
